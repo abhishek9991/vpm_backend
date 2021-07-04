@@ -65,14 +65,14 @@ exports.updateStudentByAdmin = async (req, res) => {
   if (req.body.updatedDetails.password)
     return res.status(400).json({ error: "bad request" });
   try {
-    const student = await Student.findOne({ vpmId: req.body.vpmId }, '-password');
+    let student = await Student.findOne({ vpmId: req.body.vpmId }, '-password');
     if (!student) {
       return res.status(204).json({ error: "student not found!" });
     }
-    const updatedStudent = _.extend(student, req.body.updatedDetails);
+    student = _.extend(student, req.body.updatedDetails);
     try {
-      await updatedStudent.save();
-      return res.json({ msg: "successfully updated student", updatedStudent });
+      await student.save();
+      return res.json({ msg: "successfully updated student", updatedStudent: student });
     } catch (error) {
       return res.status(400).json({ error });
     }
@@ -98,7 +98,7 @@ exports.getStudentProfile = async (req, res) => {
 
 exports.updateStudentWorkDetails = async (req, res) => {
   try {
-    const student = await Student.findOne({ email: req.user.email });
+    let student = await Student.findOne({ email: req.user.email });
     if (!student) {
       return res.status(204).json({ error: "student not found!" });
     }

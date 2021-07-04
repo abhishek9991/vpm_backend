@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const studentSchema = new mongoose.Schema({
   vpmId: {
-    type: Number,
+    type: String,
     required: true
   },
   name: {
