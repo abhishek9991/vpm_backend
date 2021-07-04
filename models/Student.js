@@ -20,8 +20,7 @@ const studentSchema = new mongoose.Schema({
     default: false
   },
   address: {
-    type: String,
-    required: true
+    type: String
   },
   state: {
     type: String
@@ -42,8 +41,7 @@ const studentSchema = new mongoose.Schema({
     required: true,
   },
   course: {
-    type: String,
-    required: true
+    type: String
   },
   stream: {
     type: String
@@ -62,11 +60,11 @@ const studentSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  internship: {
+  internship: [{
     employer: String,
     address: String,
     stipend: String
-  },
+  }],
   job: {
     company: String,
     post: String,

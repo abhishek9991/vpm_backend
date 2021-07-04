@@ -124,7 +124,7 @@ exports.authenticateAccessToken = (req, res, next) => {
   const accessToken = authHeader && authHeader.split(' ')[1]
   if (accessToken == null) return res.status(401).json({ error: "Login Required" });
 
-  jwt.verify(accessToken, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(accessToken, process.env.JWT_SECRET, (error, user) => {
     if (error) return res.status(403).json({ error })
     req.user = user;
     next()
@@ -132,7 +132,7 @@ exports.authenticateAccessToken = (req, res, next) => {
 }
 
 //is admin middleware
-function isAdmin(req, res, next) {
+exports.isAdmin = (req, res, next) => {
   if (req.user.role === 'admin')
     return next()
   else {
@@ -140,8 +140,8 @@ function isAdmin(req, res, next) {
   }
 }
 
-//is studenet middleware
-function isStudent(req, res, next) {
+//is student middleware
+exports.isStudent = (req, res, next) => {
   if (req.user.role === 'student')
     return next()
   else {
