@@ -83,7 +83,8 @@ exports.updateStudentByAdmin = async (req, res) => {
 
 //for student
 exports.getStudentProfile = async (req, res) => {
-  const { email } = req.user.email;
+  const { email } = req.user;
+  console.log(req.user);
   try {
     const result = await Student.findOne({ email }, '-password');
     if (!result) {
@@ -98,7 +99,7 @@ exports.getStudentProfile = async (req, res) => {
 
 exports.updateStudentWorkDetails = async (req, res) => {
   try {
-    let student = await Student.findOne({ email: req.user.email });
+    let student = await Student.findOne({ email: req.user.vpmId });
     if (!student) {
       return res.status(204).json({ error: "student not found!" });
     }

@@ -20,7 +20,7 @@ exports.handleAdminLogin = async (req, res) => {
 
   //make tokens
   const accessToken = generateAccessToken({ email: admin.email, name: admin.name, role: "admin" });
-  const refreshToken = jwt.sign({ email: admin.email, name: admin.name, role: "admin" }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  const refreshToken = jwt.sign({ email: admin.email, name: admin.name, role: "admin" }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 
 
   try {
@@ -52,8 +52,8 @@ exports.handleStudentLogin = async (req, res) => {
   }
 
   //make tokens
-  const accessToken = generateAccessToken({ email: student.email, name: student.name, role: "student" });
-  const refreshToken = jwt.sign({ email: student.email, name: student.name, role: "student" }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  const accessToken = generateAccessToken({ email: student.email, vpmId: student.vpmId, role: "student" });
+  const refreshToken = jwt.sign({ email: student.email, vpmId: student.vpmId, role: "student" }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 
 
   try {
@@ -72,7 +72,7 @@ exports.handleStudentLogin = async (req, res) => {
 
 //helper function for generating access token
 function generateAccessToken(user) {
-  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '15m' })
+  return jwt.sign(user, process.env.JWT_ACCESS_SECRET, { expiresIn: '15m' })
 }
 
 
@@ -82,13 +82,15 @@ exports.generateNewAccessToken = async (req, res) => {
   if (!refreshToken)
     return res.status(401).json({ error: "Access Denied!" });
   try {
-    const user = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const user = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const rToken = await RefreshToken.findOne({ email: user.email, token: refreshToken });
     if (!rToken) {
       return res.status(401).json({ error: "Access Denied!" });
     } else {
-      const newAccessToken = generateAccessToken({ name: user.name, email: user.email, role: user.role });
-      return res.json({ accessToken: newAccessToken, user: { name: user.name, email: user.email, role: user.role } });
+      delete user.iat;
+      delete user.exp;
+      const newAccessToken = generateAccessToken(user);
+      return res.json({ accessToken: newAccessToken, user });
     }
   } catch (error) {
     res.status(401).json({ error: "Access Denied!" })
@@ -104,7 +106,7 @@ exports.logout = async (req, res) => {
   }
 
   try {
-    const user = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const user = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     await RefreshToken.findOneAndDelete({ email: user.email });
     res.clearCookie('refresh_token', { httpOnly: true, secure: process.env.NODE_ENV === 'production' ? true : false })
     return res.json({ msg: "Logout Successful!" });
@@ -124,7 +126,7 @@ exports.authenticateAccessToken = (req, res, next) => {
   const accessToken = authHeader && authHeader.split(' ')[1]
   if (accessToken == null) return res.status(401).json({ error: "Login Required" });
 
-  jwt.verify(accessToken, process.env.JWT_SECRET, (error, user) => {
+  jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET, (error, user) => {
     if (error) return res.status(403).json({ error })
     req.user = user;
     next()
