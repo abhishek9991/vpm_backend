@@ -50,6 +50,17 @@ exports.getStudent = async (req, res) => {
   }
 }
 
+exports.getAllStudents = async (req, res) => {
+  try {
+    const students = await Student.find({}, '-password');
+    if (!students || students.length === 0)
+      return res.status(204).json({ error: "no student found." });
+    return res.json({ students })
+  } catch (error) {
+    res.status(400).json({ error, msg: "Failed to search students" });
+  }
+}
+
 exports.updateStudentByAdmin = async (req, res) => {
   if (req.body.updatedDetails.password)
     return res.status(400).json({ error: "bad request" });
