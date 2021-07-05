@@ -20,10 +20,12 @@ app.use(cookieParser());
 //import routes
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/student');
+const disbursementRoutes = require('./routes/disbursement');
 
 //route middlewares
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/disbursement', disbursementRoutes);
 
 
 
