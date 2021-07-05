@@ -3,13 +3,16 @@ const router = require('express').Router();
 const { loginValidator } = require('../validators');
 
 const {
-  handleAdminLogin, handleStudentLogin, generateNewAccessToken, logout
+  handleAdminLogin, handleStudentLogin, generateNewAccessToken, logout,
+  forgotPassword, resetPassword
 } = require('../controllers/auth');
 
 router.post('/admin/login', loginValidator, handleAdminLogin);
 router.post('/student/login', loginValidator, handleStudentLogin);
 router.get('/refresh_token', generateNewAccessToken);
 router.get('/logout', logout)
+router.post('/forgot_password', forgotPassword)
+router.post('/reset_password', resetPassword)
 
 //create admin - one time use
 // router.get('/admin/register', async (req, res) => {

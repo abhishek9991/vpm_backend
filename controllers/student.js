@@ -1,7 +1,9 @@
 const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
 const Student = require('../models/Student');
+const { sendMail } = require('./email')
 const _ = require('lodash');
+const crypto = require('crypto');
 
 //for admin
 exports.addStudent = async (req, res) => {
@@ -9,7 +11,7 @@ exports.addStudent = async (req, res) => {
   //   address, state, district, pincode, email, course, stream,
   //   regular, college, sponsor } = req.body.student;
   const studentDetails = req.body.student;
-  const passowrd = `${studentDetails.vpmId}@VPM`;
+  const passowrd = `${crypto.randomBytes(5).toString('hex')}@VPM`;
   const salt = await bcrypt.genSalt(10);
   const hashedPass = await bcrypt.hash(passowrd, salt);
   const student = new Student(studentDetails);
@@ -17,7 +19,14 @@ exports.addStudent = async (req, res) => {
 
   try {
     await student.save();
-    return res.status(200).json({ msg: "Successfully Added Student" })
+    try {
+      const emailResult = await sendMail({ emailData: { student: student, emailFor: 'newStudent' } });
+      if (emailResult.Error)
+        return res.status(200).json({ msg: "Successfully Added Student", emailMsg: 'failed to send mail to student' })
+      return res.status(200).json({ msg: "Successfully Added Student", emailMsg: 'successfully sent email to student' })
+    } catch (err) {
+      return res.status(200).json({ msg: "Successfully Added Student", emailMsg: 'failed to send mail to student' })
+    }
   } catch (error) {
     return res.status(400).json({ error: "Failed to add Student! Make sure you entered data correctly and try again!!", msg: error });
   }

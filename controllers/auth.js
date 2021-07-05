@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
 const Student = require('../models/Student');
 const RefreshToken = require('../models/RefreshToken')
+const { sendMail } = require('./email');
 const jwt = require('jsonwebtoken');
 
 exports.handleAdminLogin = async (req, res) => {
@@ -148,5 +149,56 @@ exports.isStudent = (req, res, next) => {
     return next()
   else {
     return res.status(401).json({ error: "Access Denied!" });
+  }
+}
+
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email)
+    return res.status(400).json({ error: "email required" });
+  try {
+    const student = await Student.findOne({ email });
+    if (!student)
+      return res.status(204).json({ error: "Student not found!" });
+
+    const secret = student.vpmId + process.env.PASSWORD_RESET_SECRET + student.password;
+    const token = jwt.sign({ email: student.email, vpmId: student.vpmId }, secret, { expiresIn: '20m' });
+    const passwordResetLink = `http://localhost:5000/reset_password/${student.vpmId}/${token}`;
+    const emailResult = await sendMail({ emailData: { emailFor: 'resetPassword', userEmail: student.email, passwordResetLink } });
+    console.log('auth controller,', emailResult);
+    if (emailResult.Error)
+      return res.status(500).json({ error: "could not send password reset link to your email address." });
+    res.json({ msg: "Password reset link has been sent to your email.", emailMsg: emailResult })
+  } catch (error) {
+    return res.status(500).json({ error: "could not send password reset link to your email address." });
+  }
+}
+
+exports.resetPassword = async (req, res) => {
+  const { vpmId, token, password } = req.body;
+  if (!password)
+    return res.status(400).json({ error: "New password required" });
+
+  try {
+    const student = await Student.findOne({ vpmId });
+    if (!student)
+      return res.status(401).json({ error: "invalid access" });
+
+    const secret = student.vpmId + process.env.PASSWORD_RESET_SECRET + student.password;
+
+    jwt.verify(token, secret, async function (error, payload) {
+      if (error) return res.status(403).json({ error })
+      if (payload.email !== student.email || payload.vpmId !== student.vpmId)
+        return res.status(401).json({ error: "invalid access" });
+      const salt = await bcrypt.genSalt(10);
+      const hashedPass = await bcrypt.hash(password, salt);
+      console.log(hashedPass, student.password);
+      student.password = hashedPass;
+      await student.save();
+      return res.json({ msg: "Your password reset has been successful!" });
+    })
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to reset your password." });
   }
 }
