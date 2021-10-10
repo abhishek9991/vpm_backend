@@ -16,7 +16,7 @@ router.post('/reset_password', resetPassword)
 
 //create admin - one time use
 // router.get('/admin/register', async (req, res) => {
-//   const passowrd = "securepass";
+//   const passowrd = "";
 //   const salt = await bcrypt.genSalt(10);
 //   const hashedPass = await bcrypt.hash(passowrd, salt);
 //   const admin = new Admin({ name: "Abhi", email: "test@123.com", password: hashedPass });
